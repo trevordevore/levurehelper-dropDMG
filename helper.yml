@@ -1,1 +1,2 @@
 packager callbacks stackfile: dropDMG_packager.livecodescript
+distribute: false
