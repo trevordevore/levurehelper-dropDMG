@@ -1,6 +1,6 @@
 # dropDMG helper
 
-Levure helper that creates a DMG of your macOS application when packaging your application.
+Levure helper that uses [DropDMG](https://c-command.com/dropdmg/) to create a DMG of your macOS application when packaging your application.
 
 ```
 # app.yml
