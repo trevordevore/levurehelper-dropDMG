@@ -12,9 +12,9 @@ command postPackagForBuildProfile pBuildProfile, pOutputFolder
 
   # Only build if a name has been set
   put levureAppGet("build profiles") into tProfilesA
-  put tProfilesA[pBuildProfile]["dropDMG"]["name"] into tName
+  put tProfilesA[pBuildProfile]["dropDMG"]["filename"] into tName
   if tName is empty then
-    put tProfilesA["all profiles"]["dropDMG"]["name"] into tName
+    put tProfilesA["all profiles"]["dropDMG"]["filename"] into tName
   end if
   # TODO: Figure out error reporting
   if tName is empty then return empty
