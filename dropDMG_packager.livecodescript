@@ -38,13 +38,16 @@ end postPackagForBuildProfile
 
 
 private function MacAppBundleFolder pBuildFolder
-  local tMacFolder
+  local tMacFolder, tMacApp
 
   put "macos" into tMacFolder
 
-  if there is a folder (pBuildFolder & "/" & tMacFolder & "/ScreenSteps.app") then
-    return pBuildFolder & "/" & tMacFolder & "/ScreenSteps.app"
+  put folders(tMacFolder) into tMacApp
+  filter tMacApp with "*.app"
+
+  if tMacApp is not empty then
+    return pBuildFolder & "/" & tMacFolder & "/" & tMacApp
   else
-    return pBuildFolder & "/" & tMacFolder & "/ScreenSteps Beta.app"
+    return empty
   end if
 end MacAppBundleFolder
