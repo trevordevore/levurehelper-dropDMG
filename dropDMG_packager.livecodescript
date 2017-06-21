@@ -1,13 +1,17 @@
 script "dropDMG Packager"
 command postPackagForBuildProfile pBuildProfile, pOutputFolder
+
+  if the platform is not "macos" then return empty
+
   local tSettingsA, tProfilesA, tName, tMacAppBundleFolder
 
   if levureAppHasProperty("dropDMG") then
     put levureAppGet("dropDMG") into tSettingsA
-    if tSettingsA is not an array then
-      # TODO: Figure out error reporting
-      return empty
-    end if
+  end if
+
+  if tSettingsA is not an array then
+    # TODO: Figure out error reporting
+    return empty
   end if
 
   # Only build if a name has been set
