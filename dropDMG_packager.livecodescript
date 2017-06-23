@@ -24,7 +24,7 @@ command postPackagForBuildProfile pBuildProfile, pOutputFolder
   if tName is empty then return empty
 
   # Have a name so create DMG
-  local tFile, tCmd
+  local tFile, tCmd, tResult, tReturnVal
 
   put MacAppBundleFolder(pOutputFolder) into tMacAppBundleFolder
 
@@ -34,10 +34,21 @@ command postPackagForBuildProfile pBuildProfile, pOutputFolder
   if tSettingsA["format"] is empty then put "bzip2" into tSettingsA["format"]
 
   # Create DMG using DropDMG
-  put format("\"%s\" --format=\"%s\" --layout-name=\"%s\" --license-name=\"%s\" --base-name=\"%s\" -o \"%s\" \"%s\"", \
-        tSettingsA["path"], tSettingsA["format"], tSettingsA["layout name"], tSettingsA["license name"], tFile, pOutputFolder, tMacAppBundleFolder) into tCmd
-  get shell(tCmd)
-  put "dropdmg return:" && it
+  put format("\"%s\" --format=\"%s\"", tSettingsA["path"], tSettingsA["format"]) into tCmd
+
+  if tSettingsA["layout name"] is not empty then
+    put format(" --layout-name=\"%s\"", tSettingsA["layout name"]) after tCmd
+  end if
+  if tSettingsA["license name"] is not empty then
+    put format(" --license-name=\"%s\"", tSettingsA["license name"]) after tCmd
+  end if
+  put format(" --base-name=\"%s\" -o \"%s\" \"%s\"", tFile, pOutputFolder, tMacAppBundleFolder) after tCmd
+  put shell(tCmd) into tResult
+  put the result into tReturnVal
+
+  if tReturnVal is not empty then
+    answer error "dropdmg reported an error in" && param(0) && "[" & textDecode(tResult, "utf8") & "]"
+  end if
 end postPackagForBuildProfile
 
 
