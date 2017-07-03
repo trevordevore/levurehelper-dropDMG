@@ -1,5 +1,5 @@
 script "dropDMG Packager"
-command postPackagForBuildProfile pBuildProfile, pOutputFolder
+command packagingComplete pBuildProfile, pOutputFolder
 
   if the platform is not "macos" then return empty
 
@@ -49,7 +49,7 @@ command postPackagForBuildProfile pBuildProfile, pOutputFolder
   if tReturnVal is not empty then
     answer error "dropdmg reported an error in" && param(0) && "[" & textDecode(tResult, "utf8") & "]"
   end if
-end postPackagForBuildProfile
+end packagingComplete
 
 
 private function MacAppBundleFolder pBuildFolder
