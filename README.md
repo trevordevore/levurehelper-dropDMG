@@ -15,7 +15,7 @@ This helper runs when you package your Levure application and will place the res
 
 To add the dropDMG helper to your application you must download it and add the `dropDMG` folder to your application `helpers` folder.
 
-Click on the green **Clone or download** button on the GitHub page and select **Download ZIP** from the menu that appears. Grab the `dropDMG` folder from the archive and add it to your application `helpers` folder.
+Click on the green **Clone or download** button on the GitHub page and select **Download ZIP** from the menu that appears. Grab the folder from the archive and rename it to `dropDMG`. Add the renamed folder to your application `helpers` folder.
 
 ## Setting up DropDMG
 
