@@ -27,16 +27,16 @@ Before using the dropDMG helper you need to set up DropDMG by doing the followin
 
 ## Configuring settings for the helper
 
-Now that DropDMG is set up you need to tell the helper where to find the command line tool, the [format](https://c-command.com/dropdmg/manual#format) for the DMG file, the layout name, and the license name. For a list of acceptable `format` values type `man dropdmg` in a Terminal window.
+Now that DropDMG is set up you need to tell the helper the [format](https://c-command.com/dropdmg/manual#format) for the DMG file, the layout name, and the license name. For a list of acceptable `format` values type `man dropdmg` in a Terminal window. You can also provide the path to the `dropdmg` command line tool if for some reason you need to. This shouldn't be required though.
 
 ```
 # app.yml
 
 dropDMG:
-  path: /usr/bin/local/dropdmg
   format: bzip2
   layout name: My App Layout
   license name: My App License
+  path: /usr/bin/local/dropdmg
 ```
 
 ## Specifying the name of the DMG file
@@ -49,12 +49,14 @@ The name of the DMG file is configured in the build profiles section so that you
 build profiles:
   ...
   release:
-    dropDMG:
+    installer name:
       # Name to use for the DMG that will be created
-      filename: My App
+      all platforms: My App
   beta:
-    dropDMG:
+    installer name:
       # Name to use for the DMG that will be created
-      filename: My App Beta
+      all platforms: My App Beta
   ...
 ```
+
+Note that `installer name` is a generic name intended to be shared by other helpers that create installers. For example, the Inno Setup helper uses `installer name` as well.
