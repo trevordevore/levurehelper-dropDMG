@@ -59,4 +59,4 @@ build profiles:
   ...
 ```
 
-Note that `installer name` is a generic name intended to be shared by other helpers that create installers. For example, the Inno Setup helper uses `installer name` as well. If you want to use a different name for `macOS` then use the `macos` key rather than the `all platforms` key.
+Note that `installer name` is a generic name intended to be shared by other helpers that work with installers. For example, the Auto Updater helper uses `installer name` as does the Inno Setup helper. If you want to use a different name for `macOS` then use the `macos` key rather than the `all platforms` key.
