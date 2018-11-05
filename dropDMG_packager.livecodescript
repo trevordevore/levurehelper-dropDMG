@@ -5,14 +5,7 @@ command packagingComplete pBuildProfile, pOutputFolder
 
   local tSettingsA, tProfilesA, tName, tMacAppBundleFolder
 
-  if levureAppHasProperty("dropDMG") then
-    put levureAppGet("dropDMG") into tSettingsA
-  end if
-
-  if tSettingsA is not an array then
-    # TODO: Figure out error reporting
-    return empty
-  end if
+  put levureAppGet("dropDMG", true) into tSettingsA
 
   # Only build if a name has been set
   put levureAppGet("build profiles") into tProfilesA
