@@ -3,7 +3,7 @@ command packagingComplete pBuildProfile, pOutputFolder
 
   if the platform is not "macos" then return empty
 
-  local tSettingsA, tProfilesA, tName, tMacAppBundleFolder
+  local tSettingsA, tProfilesA, tName, tLayoutSourceFolder
 
   put levureAppGet("dropDMG", true) into tSettingsA
 
@@ -27,7 +27,7 @@ command packagingComplete pBuildProfile, pOutputFolder
   # Have a name so create DMG
   local tFile, tCmd, tResult, tReturnVal
 
-  put MacAppBundleFolder(pOutputFolder) into tMacAppBundleFolder
+  put DropDMGLayoutSourceFolder(pOutputFolder) into tLayoutSourceFolder
 
   put tName && levureAppGet("version") & "-" & levureAppGet("build") & ".dmg" into tFile
 
@@ -43,7 +43,7 @@ command packagingComplete pBuildProfile, pOutputFolder
   if tSettingsA["license name"] is not empty then
     put format(" --license-name=\"%s\"", tSettingsA["license name"]) after tCmd
   end if
-  put format(" --base-name=\"%s\" -o \"%s\" \"%s\"", tFile, pOutputFolder, tMacAppBundleFolder) after tCmd
+  put format(" --base-name=\"%s\" -o \"%s\" \"%s\"", tFile, pOutputFolder, tLayoutSourceFolder) after tCmd
   put shell(tCmd) into tResult
   put the result into tReturnVal
 
@@ -53,17 +53,6 @@ command packagingComplete pBuildProfile, pOutputFolder
 end packagingComplete
 
 
-private function MacAppBundleFolder pBuildFolder
-  local tMacFolder, tMacApp
-
-  put pBuildFolder & "/macos" into tMacFolder
-
-  put folders(tMacFolder) into tMacApp
-  filter tMacApp with "*.app"
-
-  if tMacApp is not empty then
-    return tMacFolder & "/" & tMacApp
-  else
-    return empty
-  end if
-end MacAppBundleFolder
+private function DropDMGLayoutSourceFolder pBuildFolder
+  return pBuildFolder & "/macos"
+end DropDMGLayoutSourceFolder
