@@ -63,7 +63,3 @@ build profiles:
 ```
 
 Note that `installer name` is a generic name intended to be shared by other helpers that work with installers. For example, the Auto Updater helper uses `installer name` as does the Inno Setup helper. If you want to use a different name for `macOS` then use the `macos` key rather than the `all platforms` key.
-
-## DropDMG variables
-
-DropDMG allows you to use the `APP_VERSION` and `APP_SHORT_VERSION_STRING` variables in text used in the layout.
