@@ -65,3 +65,20 @@ build profiles:
 ```
 
 Note that `installer name` is a generic name intended to be shared by other helpers that work with installers. For example, the Auto Updater helper uses `installer name` as does the Inno Setup helper. If you want to use a different name for `macOS` then use the `macos` key rather than the `all platforms` key.
+
+## Adding additional files to the DMG
+
+In DropDMG you can add additional files to your layout. When creating the DMG DropDMG will use the source folder in order to locate these additional files. When the dropDMG helper calls the dropdmg command line tool it sets the `macos` folder as the source folder. In order to copy additional files into the `macos` folder when you package your application you can add file copy opertaions to the `copy files` > `package folder` section of the `app.yml` file.
+
+Here is an example that copies two files into the `macos` folder. In this example the `build files` folder where `instructions.rtf` and `graphic file.jpg` come from was created alongside the `app` and `levure` folders.
+
+```
+build profiles:
+  all profiles:
+    copy files:
+      package folder:
+        - filename: ../build files/instructions.rtf
+          destination: macos
+        - filename: ../build files/graphic file.jpg
+          destination: macos
+```          
