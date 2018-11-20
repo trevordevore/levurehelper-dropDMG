@@ -27,7 +27,7 @@ Before using the dropDMG helper you need to set up DropDMG by doing the followin
 
 ## Configuring settings for the helper
 
-Now that DropDMG is set up you can to tell the helper the [format](https://c-command.com/dropdmg/manual#format) for the DMG file, the `layout name`, the `license name`, and the `volume name`. All of these settings are optional. If the `volume name` is empty then the executable name will be used, minus the `.app` extension.
+Now that DropDMG is set up you can to tell the helper the [format](https://c-command.com/dropdmg/manual#format) for the DMG file, the `layout name`, the `license name`, and the `volume name`. All of these settings are optional. If the `volume name` is empty then the application bundle name minus the `.app` extension will be used as the volume name.
 
 For a list of acceptable `format` values type `man dropdmg` in a Terminal window. 
 
