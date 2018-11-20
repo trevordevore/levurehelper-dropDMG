@@ -25,15 +25,15 @@ command packagingComplete pBuildProfile, pOutputFolder
   if tName is empty then return empty
 
   # Have a name so create DMG
-  local tVolumeName, tFile, tCmd, tResult, tReturnVal
+  local tFile, tCmd, tResult, tReturnVal
 
-  put DropDMGVolumeName(pOutputFolder) into tVolumeName
   put DropDMGLayoutSourceFolder(pOutputFolder) into tLayoutSourceFolder
 
   put tName && levureAppGet("version") & "-" & levureAppGet("build") & ".dmg" into tFile
 
   if tSettingsA["path"] is empty then put "/usr/local/bin/dropdmg" into tSettingsA["path"]
   if tSettingsA["format"] is empty then put "bzip2" into tSettingsA["format"]
+  if tSettingsA["volume name"] is empty then put DropDMGVolumeName(pOutputFolder) into tSettingsA["volume name"]
 
   # Create DMG using DropDMG
   put format("\"%s\" --format=\"%s\"", tSettingsA["path"], tSettingsA["format"]) into tCmd
@@ -44,7 +44,8 @@ command packagingComplete pBuildProfile, pOutputFolder
   if tSettingsA["license name"] is not empty then
     put format(" --license-name=\"%s\"", tSettingsA["license name"]) after tCmd
   end if
-  put format(" --volume-name=\"%s\" --base-name=\"%s\" -o \"%s\" \"%s\"", tVolumeName, tFile, pOutputFolder, tLayoutSourceFolder) after tCmd
+
+  put format(" --volume-name=\"%s\" --base-name=\"%s\" -o \"%s\" \"%s\"", tSettingsA["volume name"], tFile, pOutputFolder, tLayoutSourceFolder) after tCmd
   put shell(tCmd) into tResult
   put the result into tReturnVal
 
