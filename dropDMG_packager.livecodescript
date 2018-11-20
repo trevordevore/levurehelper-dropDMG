@@ -25,8 +25,9 @@ command packagingComplete pBuildProfile, pOutputFolder
   if tName is empty then return empty
 
   # Have a name so create DMG
-  local tFile, tCmd, tResult, tReturnVal
+  local tVolumeName, tFile, tCmd, tResult, tReturnVal
 
+  put DropDMGVolumeName(pOutputFolder) into tVolumeName
   put DropDMGLayoutSourceFolder(pOutputFolder) into tLayoutSourceFolder
 
   put tName && levureAppGet("version") & "-" & levureAppGet("build") & ".dmg" into tFile
@@ -43,7 +44,7 @@ command packagingComplete pBuildProfile, pOutputFolder
   if tSettingsA["license name"] is not empty then
     put format(" --license-name=\"%s\"", tSettingsA["license name"]) after tCmd
   end if
-  put format(" --base-name=\"%s\" -o \"%s\" \"%s\"", tFile, pOutputFolder, tLayoutSourceFolder) after tCmd
+  put format(" --volume-name=\"%s\" --base-name=\"%s\" -o \"%s\" \"%s\"", tVolumeName, tFile, pOutputFolder, tLayoutSourceFolder) after tCmd
   put shell(tCmd) into tResult
   put the result into tReturnVal
 
@@ -56,3 +57,20 @@ end packagingComplete
 private function DropDMGLayoutSourceFolder pBuildFolder
   return pBuildFolder & "/macos"
 end DropDMGLayoutSourceFolder
+
+
+private function DropDMGVolumeName pBuildFolder
+  local tMacFolder, tMacApp
+
+  put pBuildFolder & "/macos" into tMacFolder
+
+  put folders(tMacFolder) into tMacApp
+  filter tMacApp with "*.app"
+
+  if tMacApp is not empty then
+    set the itemdelimiter to "."
+    return item 1 to -2 of tMacApp
+  else
+    return empty
+  end if
+end DropDMGVolumeName
