@@ -3,7 +3,7 @@ command packagingComplete pBuildProfile, pOutputFolder
 
   if the platform is not "macos" then return empty
 
-  local tSettingsA, tProfilesA, tName, tMacAppBundleFolder
+  local tSettingsA, tProfilesA, tName, tLayoutSourceFolder
 
   put levureAppGet("dropDMG", true) into tSettingsA
 
@@ -27,12 +27,13 @@ command packagingComplete pBuildProfile, pOutputFolder
   # Have a name so create DMG
   local tFile, tCmd, tResult, tReturnVal
 
-  put MacAppBundleFolder(pOutputFolder) into tMacAppBundleFolder
+  put DropDMGLayoutSourceFolder(pOutputFolder) into tLayoutSourceFolder
 
   put tName && levureAppGet("version") & "-" & levureAppGet("build") & ".dmg" into tFile
 
   if tSettingsA["path"] is empty then put "/usr/local/bin/dropdmg" into tSettingsA["path"]
   if tSettingsA["format"] is empty then put "bzip2" into tSettingsA["format"]
+  if tSettingsA["volume name"] is empty then put DropDMGVolumeName(pOutputFolder) into tSettingsA["volume name"]
 
   # Create DMG using DropDMG
   put format("\"%s\" --format=\"%s\"", tSettingsA["path"], tSettingsA["format"]) into tCmd
@@ -43,7 +44,8 @@ command packagingComplete pBuildProfile, pOutputFolder
   if tSettingsA["license name"] is not empty then
     put format(" --license-name=\"%s\"", tSettingsA["license name"]) after tCmd
   end if
-  put format(" --base-name=\"%s\" -o \"%s\" \"%s\"", tFile, pOutputFolder, tMacAppBundleFolder) after tCmd
+
+  put format(" --volume-name=\"%s\" --base-name=\"%s\" -o \"%s\" \"%s\"", tSettingsA["volume name"], tFile, pOutputFolder, tLayoutSourceFolder) after tCmd
   put shell(tCmd) into tResult
   put the result into tReturnVal
 
@@ -53,7 +55,12 @@ command packagingComplete pBuildProfile, pOutputFolder
 end packagingComplete
 
 
-private function MacAppBundleFolder pBuildFolder
+private function DropDMGLayoutSourceFolder pBuildFolder
+  return pBuildFolder & "/macos"
+end DropDMGLayoutSourceFolder
+
+
+private function DropDMGVolumeName pBuildFolder
   local tMacFolder, tMacApp
 
   put pBuildFolder & "/macos" into tMacFolder
@@ -62,8 +69,9 @@ private function MacAppBundleFolder pBuildFolder
   filter tMacApp with "*.app"
 
   if tMacApp is not empty then
-    return tMacFolder & "/" & tMacApp
+    set the itemdelimiter to "."
+    return item 1 to -2 of tMacApp
   else
     return empty
   end if
-end MacAppBundleFolder
+end DropDMGVolumeName

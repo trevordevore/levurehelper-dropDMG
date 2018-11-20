@@ -27,7 +27,11 @@ Before using the dropDMG helper you need to set up DropDMG by doing the followin
 
 ## Configuring settings for the helper
 
-Now that DropDMG is set up you need to tell the helper the [format](https://c-command.com/dropdmg/manual#format) for the DMG file, the layout name, and the license name. For a list of acceptable `format` values type `man dropdmg` in a Terminal window. You can also provide the path to the `dropdmg` command line tool if for some reason you need to. This shouldn't be required though.
+Now that DropDMG is set up you can to tell the helper the [format](https://c-command.com/dropdmg/manual#format) for the DMG file, the `layout name`, the `license name`, and the `volume name`. All of these settings are optional. If the `volume name` is empty then the application bundle name minus the `.app` extension will be used as the volume name.
+
+For a list of acceptable `format` values type `man dropdmg` in a Terminal window. 
+
+You can also provide the path to the `dropdmg` command line tool if for some reason you need to. This shouldn't be required though.
 
 ```
 # app.yml
@@ -36,6 +40,7 @@ dropDMG:
   format: bzip2
   layout name: My App Layout
   license name: My App License
+  volume name: My App
   path: /usr/bin/local/dropdmg
 ```
 
