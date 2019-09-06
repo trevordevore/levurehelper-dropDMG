@@ -46,7 +46,7 @@ command packagingComplete pBuildProfile, pOutputFolder
   end if
 
   put format(" --volume-name=\"%s\" --base-name=\"%s\" -o \"%s\" \"%s\"", tSettingsA["volume name"], tFile, pOutputFolder, tLayoutSourceFolder) after tCmd
-  packagerLog "dropDMG shell command:" && tCmd
+  dispatch "packagerLog" to stack "Levure Framework Application Packager" with "dropDMG shell command:" && tCmd
   put shell(tCmd) into tResult
   put the result into tReturnVal
 
