@@ -1,5 +1,5 @@
 script "dropDMG Packager"
-command packagingComplete pBuildProfile, pOutputFolder
+command packagingComplete pBuildProfile, pOutputFolder, @xAppA
 
   if the platform is not "macos" then return empty
 
@@ -43,6 +43,10 @@ command packagingComplete pBuildProfile, pOutputFolder
   end if
   if tSettingsA["license name"] is not empty then
     put format(" --license-name=\"%s\"", tSettingsA["license name"]) after tCmd
+  end if
+
+  if xAppA["macos signing certificate"] is not empty then
+    put format(" --signing-identity=\"%s\"", xAppA["macos signing certificate"]) after tCmd
   end if
 
   put format(" --volume-name=\"%s\" --base-name=\"%s\" -o \"%s\" \"%s\"", tSettingsA["volume name"], tFile, pOutputFolder, tLayoutSourceFolder) after tCmd
