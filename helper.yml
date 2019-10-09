@@ -1,0 +1,2 @@
+packager callbacks stackfile: macos_notary_packager.livecodescript
+distribute: false
