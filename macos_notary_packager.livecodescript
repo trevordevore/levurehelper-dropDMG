@@ -16,24 +16,39 @@ end finalizePackageForPlatform
 
 
 /**
-Summary: Summary
+Summary: Notarizes a DMG file.
+
+Parameters:
+pBuildProfile:
+pOutputFolder: Root path to output folder.
+pAppA: If the `macos dmg filename` key points to a DMG file that path will be used. Otherwise `pOutputFolder` is searched for a .dmg file.
+
+Description:
+This handler will notarize and staple the DMG file so it may take a while to run.
+
+Returns: nothing
 
 */
 command packagingComplete pBuildProfile, pOutputFolder, pAppA
   if the platform is not "macos" then return empty
-  if there is not a file pAppA["macos dmg filename"] then
-    answer error "macOS Notary error: No path to DMG file provided."
-    return empty
-  end if
 
   local tCmd, tPrimaryId, tEnvA, tResult, tReturnVal
 
   put levureAppGetENV() into tEnvA
+  put _resolveFileToNotarize(pOutputFolder, pAppA["macos dmg filename"]) into tEnvA["macos dmg filename"]
+
+  if there is not a file tEnvA["macos dmg filename"] then
+    answer error "macOS Notary error: No path to DMG file provided and no DMG file was found in " &quote& pOutputFolder &quote& "."
+    return empty
+  end if
 
   put pAppA["name"] && pAppA["version"] & "." & pAppA["build"] into tPrimaryId
   replace space with "-" in tPrimaryId
 
-  if tEnvA["macos_notary_password"] is empty then
+  if tEnvA["macos_notary_password"] is not empty then
+    # URL encode special characters
+    put _rawURLEncode(tEnvA["macos_notary_password"]) into tEnvA["macos_notary_password"]
+  else
     local tKeyChainName
 
     put pAppA["name"] into tKeyChainName
@@ -48,44 +63,213 @@ command packagingComplete pBuildProfile, pOutputFolder, pAppA
   put format(" --primary-bundle-id \"%s\"", tPrimaryId) after tCmd
   put format(" --username \"%s\"", tEnvA["macos_notary_username"]) after tCmd
   put format(" --password \"%s\"", tEnvA["macos_notary_password"]) after tCmd
-  put format(" --file \"%s\"", pAppA["macos dmg filename"]) after tCmd
+  put format(" --file \"%s\"", tEnvA["macos dmg filename"]) after tCmd
   if tEnvA["macos_notary_ascprovider"] is not empty then
     put format(" --ascprovider \"%s\"", tEnvA["macos_notary_ascprovider"]) after tCmd
   end if
 
-  dispatch "packagerLog" to stack "Levure Framework Application Packager" with "macos-notary shell command:" && tCmd
+  _log "macos-notary --notarize-app command:" && tCmd
   put shell(tCmd) into tResult
   put the result into tReturnVal
 
-  if tReturnVal is not empty then
-    answer error "macOS Notary reported an error in" && param(0) && "[" & textDecode(tResult, "utf8") & "]"
+  put textDecode(tResult, "utf8") into tResult
+  _log "macos-notary --notarize-app response:" &cr& tResult
+
+  if tReturnVal is empty then
+    local tRequestUUID
+
+    put _extractRequestUUID(tResult) into tRequestUUID
+    if tRequestUUID is not empty then
+      _monitorAnalysisForCompletion tRequestUUID, tEnvA
+    else
+      answer error "RequestUUID was not found in the response" & cr & "[" & tResult & "]"
+    end if
+  else
+    answer error "macOS Notary reported an error in" && param(0) && "[" & tResult & "]"
   end if
 end packagingComplete
 
 
-/*
-xcrun altool -type osx --notarize-app result:
+/**
+Summary: Locates a DMG file to notarize.
 
-2019-10-09 00:01:32.958 altool[27575:455061] No errors uploading '/Users/trevordevore/Development/screensteps-4/builds/beta/4.1.1-556/ScreenSteps Beta 4.1.1-556.dmg'.
-RequestUUID = 3da8fdf4-0c86-46fd-b72e-338983d9dafc
+Parameters:
+pRootFolder: The folder to search for a DMG.
+pFilename: If this points to an existing file then that file will be notarized and pRootFolder will not be searched.
+
+Returns: Filename
 */
+private function _resolveFileToNotarize pRootFolder, pFilename
+  if pFilename is not empty and there is a file pFilename then
+    return pFilename
+  else
+    local tFiles
 
-/*
-xcrun altool --notarization-info success result:
+    put files(pRootFolder) into tFiles
+    filter tFiles with "*.dmg"
 
-2019-10-09 00:06:39.966 altool[27819:476350] No errors getting notarization info.
-
-   RequestUUID: 3da8fdf4-0c86-46fd-b72e-338983d9dafc
-          Date: 2019-10-09 05:01:33 +0000
-        Status: success
-    LogFileURL: https://osxapps-ssl.itunes.apple.com/itunes-assets/Enigma113/v4/ca/b3/36/cab33654-ead9-c42e-050f-59c90ba608d1/developer_log.json?accessKey=1570791999_8603781023417794841_ssZw1f28ESDK9aCwCFA%2B1%2B7qn8yxbwixyhDxQCT%2Bs9%2FFPG7U4kBIbmVm2G0TQRF%2Bl%2FtB1SmolZ%2BGraXIsRNFEjJIE8bTUgHGCKWn1p%2Bhzq53R74CVC%2BOY3JhkhzdrgkLbZXv%2FGTwmBPCqcZs0jb%2BulioPCU2FvfVMFdxgCFZ%2F1g%3D
-   Status Code: 0
-Status Message: Package Approved
-*/
+    return line 1 of tFiles
+  end if
+end _resolveFileToNotarize
 
 
 /**
-Summary: Replaces .lproj folders with
+Summary: Extract the RequestUUID from the `xcrun altool -type osx --notarize-app` response.
+
+Parameters:
+pAlToolResponse: The data returned from the call.
+
+Returns: UUID
+*/
+private function _extractRequestUUID pAlToolResponse
+  local tLineNo, tLine, tRequestUUID
+
+  put lineoffset("RequestUUID = ", pAlToolResponse) into tLineNo
+  if tLineNo > 0 then
+    put word 1 to -1 of line tLineNo of pAlToolResponse into tLine
+    split tLine by CR and " = "
+    put word 1 to -1 of tLine["RequestUUID"] into tRequestUUID
+  end if
+
+  return tRequestUUID
+end _extractRequestUUID
+
+
+/**
+Summary: Converts a response from `xcrun altool --notarization-info` to an array.
+
+Parameters:
+pAlToolResponse: The data returned from the call.
+
+Description:
+
+Keys in the array include:
+
+- RequestUUID
+- Date
+- Status
+- LogFileURL
+- Status Code
+- Status Message
+
+Returns: Array
+*/
+private function _extractResponseVariables pAlToolResponse
+  local tLineNo, tVariables, tKey, tValuesA
+
+  put lineoffset("RequestUUID: ", pAlToolResponse) into tLineNo
+  if tLineNo > 0 then
+    put line tLineNo to -1 of pAlToolResponse into tVariables
+    split tVariables by CR and ": "
+
+    # Strip out whitespace around keys
+    repeat for each key tKey in tVariables
+      put tVariables[tKey] into tValuesA[word 1 to -1 of tKey]
+    end repeat
+  end if
+
+  return tValuesA
+end _extractResponseVariables
+
+
+/**
+Summary: Monitors the notarization status after the DMG has been successfully uploaded.
+
+Parameters:
+pRequestUUID: The UUID returned by `--notarize-app`.
+pEnvA: The environmental variables with information such as username and password.
+
+Returns: nothing
+*/
+private command _monitorAnalysisForCompletion pRequestUUID, pEnvA
+  local tCmd, tResult, tReturnVal, tCounter
+
+  repeat forever
+    add 1 to tCounter
+
+    put format("xcrun altool --notarization-info \"%s\"", pRequestUUID) into tCmd
+    put format(" --username \"%s\"", pEnvA["macos_notary_username"]) after tCmd
+    put format(" --password \"%s\"", pEnvA["macos_notary_password"]) after tCmd
+    if pEnvA["macos_notary_ascprovider"] is not empty then
+      put format(" --ascprovider \"%s\"", pEnvA["macos_notary_ascprovider"]) after tCmd
+    end if
+
+    if tCounter is 1 then
+      _log "macos-notary --notarize-info command:" && tCmd
+    end if
+    _log "macos-notary --notarize-info attempt #" & tCounter
+
+    put shell(tCmd) into tResult
+    put the result into tReturnVal
+
+    put textDecode(tResult, "utf8") into tResult
+
+    if tReturnVal is empty then
+      local tResponseA
+
+      put _extractResponseVariables(tResult) into tResponseA
+
+      switch tResponseA["Status"]
+        case "in progress"
+          wait 10 seconds with messages
+          break
+
+        case "invalid"
+          _log "macos-notary --notarize-info response:" &cr& tResult
+          answer error "--notarize-info error:" && tResponseA["Status Message"]
+          exit repeat
+          break
+
+        case "success"
+          _log "macos-notary --notarize-info response:" &cr& tResult
+          _stapleDMG pEnvA["macos dmg filename"]
+          exit repeat
+          break
+
+        default
+          _log "macos-notary --notarize-info response:" &cr& tResult
+          answer error "--notarize-info unknown status:" && tResponseA["Status"]
+          exit repeat
+          break
+      end switch
+    else
+      _log "macOS Notary reported an error in" && param(0) && "[" & tResult & "]"
+      answer error "macOS Notary reported an error in" && param(0) && "[" & tResult & "]"
+      exit repeat
+    end if
+  end repeat
+end _monitorAnalysisForCompletion
+
+
+/**
+Summary: Staple notarization information to the DMG after it has been successfully notarized.
+
+Parameters:
+pFilename: The path to the file to staple.
+
+Returns: nothing
+*/
+private command _stapleDMG pFilename
+  local tCmd, tResult, tReturnVal
+
+  put format("xcrun stapler staple -v \"%s\"", pFilename) into tCmd
+  _log "macos-notary --notarize-info command:" && tCmd
+  put shell(tCmd) into tResult
+  put the result into tReturnVal
+
+  put textDecode(tResult, "utf8") into tResult
+  _log "macos-notary stapler response:" &cr& tResult
+
+  if tReturnVal is not empty then
+    answer error "macOS Notary reported an error in stapler" && "[" & tResult & "]"
+  end if
+
+  return empty
+end _stapleDMG
+
+
+/**
+Summary: Replaces .lproj folders with ISO names.
 
 Returns: nothing
 */
@@ -130,3 +314,17 @@ private function _localizationLookup
 
   return tA
 end _localizationLookup
+
+
+private function _rawURLEncode pString
+  put URLEncode(pString) into pString
+  replace "+" with "%20" in pString
+  replace "*" with "%2A" in pString
+  return pString
+end _rawURLEncode
+
+
+private command _log pMsg
+  put replaceText(pMsg, "--password " &quote& "(.*?)" &quote, "--password REDACTED") into pMsg
+  dispatch "packagerLog" to stack "Levure Framework Application Packager" with pMsg
+end _log
