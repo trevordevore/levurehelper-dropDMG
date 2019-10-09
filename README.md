@@ -5,7 +5,7 @@ For detailed instructions on how the notarization process works please refer to 
 
 http://lessons.livecode.com/m/4071/l/1122100-codesigning-and-notarizing-your-lc-standalone-for-distribution-outside-the-mac-appstore
 
-If you need a helper that creates DMG files refer to the (https://github.com/trevordevore/levurehelper-dropDMG)[DropDMG helper].
+If you need a helper that creates DMG files refer to the [DropDMG helper](https://github.com/trevordevore/levurehelper-dropDMG).
 
 ## Contents
 
