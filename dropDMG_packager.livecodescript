@@ -54,7 +54,10 @@ command packagingComplete pBuildProfile, pOutputFolder, @xAppA
   put shell(tCmd) into tResult
   put the result into tReturnVal
 
-  if tReturnVal is not empty then
+  if tReturnVal is empty then
+    # Store so other helpers can use
+    put pOutputFolder & "/" & tFile into xAppA["macos dmg filename"]
+  else
     answer error "dropdmg reported an error in" && param(0) && "[" & textDecode(tResult, "utf8") & "]"
   end if
 end packagingComplete
