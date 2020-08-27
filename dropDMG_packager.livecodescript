@@ -1,9 +1,17 @@
 script "dropDMG Packager"
 command packagingComplete pBuildProfile, pOutputFolder, @xAppA
-
   if the platform is not "macos" then return empty
 
-  local tSettingsA, tProfilesA, tName, tLayoutSourceFolder
+  local tLayoutSourceFolder
+
+  put DropDMGLayoutSourceFolder(pOutputFolder) into tLayoutSourceFolder
+  if there is not a folder tLayoutSourceFolder then
+    dispatch "packagerLog" to stack "Levure Framework Application Packager" \
+          with "dropDMG exiting because source folder doesn't exist:" && tLayoutSourceFolder
+    return empty
+  end if
+
+  local tSettingsA, tProfilesA, tName
 
   put levureAppGet("dropDMG", true) into tSettingsA
 
@@ -26,8 +34,6 @@ command packagingComplete pBuildProfile, pOutputFolder, @xAppA
 
   # Have a name so create DMG
   local tFile, tCmd, tResult, tReturnVal
-
-  put DropDMGLayoutSourceFolder(pOutputFolder) into tLayoutSourceFolder
 
   put tName && levureAppGet("version") & "-" & levureAppGet("build") & ".dmg" into tFile
 
